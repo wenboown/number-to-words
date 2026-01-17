@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number to Words Converter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Number to Words</h1>
+            <p class="subtitle">Enter a number to find matching words (like old phone keypads!)</p>
+        </header>
+
+        <div class="keypad-reference">
+            <div class="key">2: ABC</div>
+            <div class="key">3: DEF</div>
+            <div class="key">4: GHI</div>
+            <div class="key">5: JKL</div>
+            <div class="key">6: MNO</div>
+            <div class="key">7: PQRS</div>
+            <div class="key">8: TUV</div>
+            <div class="key">9: WXYZ</div>
+        </div>
+
+        <div class="input-section">
+            <input
+                type="text"
+                id="numberInput"
+                placeholder="Enter numbers (2-9 only)"
+                maxlength="15"
+                autocomplete="off"
+            >
+            <button id="convertBtn">Convert</button>
+            <button id="clearBtn">Clear</button>
+        </div>
+
+        <div id="loadingStatus" class="loading-status">
+            Loading dictionary...
+        </div>
+
+        <div id="results" class="results">
+            <div class="results-header">
+                <span id="resultsCount"></span>
+            </div>
+            <div id="wordList" class="word-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
