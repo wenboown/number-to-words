@@ -92,55 +92,41 @@ function handleKeyPress(event) {
     }
 }
 
-// Find all word combinations for a given number string
-// Uses dynamic programming to find all valid ways to split the number into words
-function findWordCombinations(number, maxWords = 3, maxResults = 100) {
-    const results = [];
+// Find word split patterns for a given number string
+// Returns all possible digit splits with their corresponding words
+// Example: 726268 -> {3+3: {left: "726" words, right: "268" words}}
+function findWordSplits(number) {
+    const splits = [];
+    const len = number.length;
 
-    // Helper function to recursively find combinations
-    function findCombos(startIdx, currentCombo) {
-        // Stop if we've found enough results
-        if (results.length >= maxResults) {
-            return;
-        }
+    // Only create splits for numbers 4+ digits
+    if (len < 4) {
+        return splits;
+    }
 
-        // If we've reached the end, we found a valid combination
-        if (startIdx === number.length) {
-            if (currentCombo.length > 0) {
-                results.push([...currentCombo]);
-            }
-            return;
-        }
+    // Generate all possible splits (don't split into single digits)
+    for (let splitPoint = 2; splitPoint <= len - 2; splitPoint++) {
+        const leftNum = number.substring(0, splitPoint);
+        const rightNum = number.substring(splitPoint);
 
-        // Don't allow too many words in a combination
-        if (currentCombo.length >= maxWords) {
-            return;
-        }
+        const leftWords = numberToWords[leftNum] || [];
+        const rightWords = numberToWords[rightNum] || [];
 
-        // Try all possible word lengths from current position
-        for (let endIdx = startIdx + 2; endIdx <= Math.min(startIdx + 15, number.length); endIdx++) {
-            const substring = number.substring(startIdx, endIdx);
-            const words = numberToWords[substring];
-
-            if (words && words.length > 0) {
-                // Try each matching word
-                const wordsToTry = words.slice(0, 10); // Limit words per position to prevent explosion
-                for (const word of wordsToTry) {
-                    currentCombo.push(word);
-                    findCombos(endIdx, currentCombo);
-                    currentCombo.pop();
-
-                    // Stop if we've found enough results
-                    if (results.length >= maxResults) {
-                        return;
-                    }
-                }
-            }
+        // Only include if both sides have at least one word
+        if (leftWords.length > 0 && rightWords.length > 0) {
+            splits.push({
+                pattern: `${splitPoint}+${len - splitPoint}`,
+                leftNum: leftNum,
+                rightNum: rightNum,
+                leftWords: leftWords.slice(0, 20), // Limit to 20 words per side
+                rightWords: rightWords.slice(0, 20),
+                leftTotal: leftWords.length,
+                rightTotal: rightWords.length
+            });
         }
     }
 
-    findCombos(0, []);
-    return results;
+    return splits;
 }
 
 // Convert number to words
@@ -172,18 +158,16 @@ function convertNumber() {
     // Look up single word matches
     const singleWords = numberToWords[input] || [];
 
-    // Find word combinations (only for numbers 4+ digits)
-    let combinations = [];
-    if (input.length >= 4) {
-        combinations = findWordCombinations(input);
-    }
+    // Find word split patterns (only for numbers 4+ digits)
+    const splits = findWordSplits(input);
 
     // Display results
     resultsDiv.style.display = 'block';
 
-    const totalResults = singleWords.length + combinations.length;
+    const hasSingleWords = singleWords.length > 0;
+    const hasSplits = splits.length > 0;
 
-    if (totalResults === 0) {
+    if (!hasSingleWords && !hasSplits) {
         resultsCount.textContent = 'No words found';
         wordList.innerHTML = '<div class="no-results">No matching words or combinations found.</div>';
         return;
@@ -191,23 +175,23 @@ function convertNumber() {
 
     // Display count
     let countText = '';
-    if (singleWords.length > 0 && combinations.length > 0) {
-        countText = `Found ${singleWords.length} word${singleWords.length === 1 ? '' : 's'} and ${combinations.length} combination${combinations.length === 1 ? '' : 's'}`;
-    } else if (singleWords.length > 0) {
+    if (hasSingleWords && hasSplits) {
+        countText = `Found ${singleWords.length} full-length word${singleWords.length === 1 ? '' : 's'} and ${splits.length} split pattern${splits.length === 1 ? '' : 's'}`;
+    } else if (hasSingleWords) {
         countText = `Found ${singleWords.length} word${singleWords.length === 1 ? '' : 's'}`;
     } else {
-        countText = `Found ${combinations.length} combination${combinations.length === 1 ? '' : 's'}`;
+        countText = `Found ${splits.length} split pattern${splits.length === 1 ? '' : 's'}`;
     }
     resultsCount.textContent = countText;
 
-    // Display single words first
-    if (singleWords.length > 0) {
+    // Display single words first (full-length matches)
+    if (hasSingleWords) {
         const section = document.createElement('div');
         section.className = 'result-section';
 
         const header = document.createElement('div');
         header.className = 'section-header';
-        header.textContent = 'Single Words';
+        header.textContent = `Full ${input.length}-Digit Words`;
         section.appendChild(header);
 
         // Limit display to first 50 words
@@ -229,24 +213,61 @@ function convertNumber() {
         wordList.appendChild(section);
     }
 
-    // Display combinations
-    if (combinations.length > 0) {
-        const section = document.createElement('div');
-        section.className = 'result-section';
+    // Display split patterns
+    if (hasSplits) {
+        splits.forEach(split => {
+            const section = document.createElement('div');
+            section.className = 'result-section split-section';
 
-        const header = document.createElement('div');
-        header.className = 'section-header';
-        header.textContent = 'Word Combinations';
-        section.appendChild(header);
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            header.textContent = `${split.pattern} Split: ${split.leftNum} + ${split.rightNum}`;
+            section.appendChild(header);
 
-        combinations.forEach(combo => {
-            const comboDiv = document.createElement('div');
-            comboDiv.className = 'word-item combo-item';
-            comboDiv.textContent = combo.join(' + ');
-            section.appendChild(comboDiv);
+            // Create a split container showing both sides
+            const splitContainer = document.createElement('div');
+            splitContainer.className = 'split-container';
+
+            // Left side
+            const leftSide = document.createElement('div');
+            leftSide.className = 'split-side';
+
+            const leftLabel = document.createElement('div');
+            leftLabel.className = 'split-label';
+            leftLabel.textContent = `${split.leftNum} (${split.leftTotal} word${split.leftTotal === 1 ? '' : 's'}):`;
+            leftSide.appendChild(leftLabel);
+
+            const leftWords = document.createElement('div');
+            leftWords.className = 'split-words';
+            leftWords.textContent = split.leftWords.join(', ');
+            if (split.leftTotal > split.leftWords.length) {
+                leftWords.textContent += ` (+${split.leftTotal - split.leftWords.length} more)`;
+            }
+            leftSide.appendChild(leftWords);
+
+            // Right side
+            const rightSide = document.createElement('div');
+            rightSide.className = 'split-side';
+
+            const rightLabel = document.createElement('div');
+            rightLabel.className = 'split-label';
+            rightLabel.textContent = `${split.rightNum} (${split.rightTotal} word${split.rightTotal === 1 ? '' : 's'}):`;
+            rightSide.appendChild(rightLabel);
+
+            const rightWords = document.createElement('div');
+            rightWords.className = 'split-words';
+            rightWords.textContent = split.rightWords.join(', ');
+            if (split.rightTotal > split.rightWords.length) {
+                rightWords.textContent += ` (+${split.rightTotal - split.rightWords.length} more)`;
+            }
+            rightSide.appendChild(rightWords);
+
+            splitContainer.appendChild(leftSide);
+            splitContainer.appendChild(rightSide);
+            section.appendChild(splitContainer);
+
+            wordList.appendChild(section);
         });
-
-        wordList.appendChild(section);
     }
 }
 
