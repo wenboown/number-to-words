@@ -265,6 +265,42 @@ button {
     font-weight: 500;
 }
 
+/* Split pattern styles */
+.split-section {
+    margin-bottom: 25px;
+}
+
+.split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.split-side {
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.split-label {
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    font-family: 'Courier New', monospace;
+}
+
+.split-words {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.95em;
+    word-wrap: break-word;
+}
+
 /* Responsive design */
 @media (max-width: 600px) {
     .container {
@@ -301,5 +337,23 @@ button {
 
     .combo-item {
         font-size: 0.95em;
+    }
+
+    .split-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 12px;
+    }
+
+    .split-side {
+        padding: 10px;
+    }
+
+    .split-label {
+        font-size: 0.9em;
+    }
+
+    .split-words {
+        font-size: 0.9em;
     }
 }
